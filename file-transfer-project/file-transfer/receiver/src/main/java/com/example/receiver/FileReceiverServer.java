@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 
 public class FileReceiverServer {
@@ -17,7 +18,7 @@ public class FileReceiverServer {
     private static final Path ROOT_DIR = Paths.get("uploads"); // Zielordner
 
     public static void main(String[] args) throws IOException {
-        var server = HttpServer.create(new InetSocketAddress(8080), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         server.createContext("/upload/", new UploadHandler());
         server.setExecutor(null);
         server.start();
@@ -32,8 +33,8 @@ public class FileReceiverServer {
                 return;
             }
 
-            var rawPath = exchange.getRequestURI().getPath().substring("/upload/".length());
-            var decodedPath = URLDecoder.decode(rawPath, "UTF-8");
+            String rawPath = exchange.getRequestURI().getPath().substring("/upload/".length());
+            String decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
 
             Path targetPath = ROOT_DIR.resolve(decodedPath).normalize();
             if (!targetPath.startsWith(ROOT_DIR)) {
@@ -43,8 +44,8 @@ public class FileReceiverServer {
 
             Files.createDirectories(targetPath.getParent());
 
-            try (var out = Files.newOutputStream(targetPath);
-                 var in = exchange.getRequestBody()) {
+            try (OutputStream out = Files.newOutputStream(targetPath);
+                 InputStream in = exchange.getRequestBody()) {
                 in.transferTo(out);
             }
 
@@ -52,7 +53,7 @@ public class FileReceiverServer {
             System.out.println(msg);
             byte[] response = msg.getBytes();
             exchange.sendResponseHeaders(200, response.length);
-            try (var os = exchange.getResponseBody()) {
+            try (OutputStream os = exchange.getResponseBody()) {
                 os.write(response);
             }
         }
