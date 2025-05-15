@@ -7,6 +7,10 @@
   <artifactId>file-transfer</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+  </properties>
+
   <modules>
     <module>sender</module>
     <module>receiver</module>

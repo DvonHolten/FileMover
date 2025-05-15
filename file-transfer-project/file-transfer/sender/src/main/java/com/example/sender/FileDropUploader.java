@@ -3,10 +3,17 @@
 
 package com.example.sender;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingConstants;
+import java.awt.Font;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.dnd.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -15,7 +22,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class FileDropUploader {
@@ -23,8 +31,8 @@ public class FileDropUploader {
     private static final String TARGET_URL = "http://192.168.1.42:8080/upload/"; // Ziel-URL anpassen
 
     public static void main(String[] args) {
-        var frame = new JFrame("Datei- & Ordner-Uploader per Drag & Drop");
-        var label = new JLabel("<html><center>Dateien oder Ordner hierher ziehen<br>und sie werden rekursiv per HTTP PUT gesendet</center></html>", SwingConstants.CENTER);
+        JFrame frame = new JFrame("Datei- & Ordner-Uploader per Drag & Drop");
+        JLabel label = new JLabel("<html><center>Dateien oder Ordner hierher ziehen<br>und sie werden rekursiv per HTTP PUT gesendet</center></html>", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.PLAIN, 16));
         frame.add(label);
 
@@ -33,7 +41,7 @@ public class FileDropUploader {
             public void drop(DropTargetDropEvent dtde) {
                 try {
                     dtde.acceptDrop(DnDConstants.ACTION_COPY);
-                    var transferable = dtde.getTransferable();
+                    Transferable transferable = dtde.getTransferable();
                     @SuppressWarnings("unchecked")
                     List<File> dropped = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
 
@@ -73,26 +81,26 @@ public class FileDropUploader {
     }
 
     private static void uploadFile(Path filePath, Path baseDir) throws IOException, InterruptedException {
-        var relativePath = baseDir.relativize(filePath);
-        var encodedPath = encodePath(relativePath);
+        Path relativePath = baseDir.relativize(filePath);
+        String encodedPath = encodePath(relativePath);
 
         URI uri = URI.create(TARGET_URL + encodedPath);
 
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder()
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .PUT(HttpRequest.BodyPublishers.ofFile(filePath))
                 .header("Content-Type", "application/octet-stream")
                 .build();
 
-        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         System.out.println("⬆ " + relativePath + " → " + response.statusCode());
     }
 
     private static String encodePath(Path path) {
         StringBuilder encoded = new StringBuilder();
         for (Path part : path) {
-            if (encoded.length() > 0) encoded.append("/");
+            if (!encoded.isEmpty()) encoded.append("/");
             encoded.append(URLEncoder.encode(part.toString(), StandardCharsets.UTF_8)
                                      .replace("+", "%20"));
         }
