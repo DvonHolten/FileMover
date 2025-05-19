@@ -37,6 +37,13 @@ public class FileReceiverServer {
                 return;
             }
 
+            long fileModificationTime = System.currentTimeMillis();
+            String lastModStr = exchange.getRequestHeaders().getFirst("X-Last-modified");
+            if ( lastModStr != null ){
+                // fileModificationDate was sent
+                fileModificationTime = Long.parseLong(lastModStr);
+            }
+
             String rawPath = exchange.getRequestURI().getPath().substring("/upload/".length());
             String decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
 
@@ -51,6 +58,7 @@ public class FileReceiverServer {
             try (OutputStream out = Files.newOutputStream(targetPath);
                  InputStream in = exchange.getRequestBody()) {
                 in.transferTo(out);
+                targetPath.toFile().setLastModified( fileModificationTime );
             }
 
             String msg = "✅ Gespeichert: " + targetPath;

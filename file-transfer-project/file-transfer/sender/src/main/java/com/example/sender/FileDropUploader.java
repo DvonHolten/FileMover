@@ -28,12 +28,14 @@ import java.util.List;
 
 public class FileDropUploader {
 
-    private static final String TARGET_URL = "http://192.168.1.42:8080/upload/"; // Ziel-URL anpassen
+    private static final String TARGET_URL = "http://192.168.0.20:8080/upload/"; // Ziel-URL anpassen
+
+    private static final Font labelFont = new Font("SansSerif", Font.PLAIN, 16);
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Datei- & Ordner-Uploader per Drag & Drop");
         JLabel label = new JLabel("<html><center>Dateien oder Ordner hierher ziehen<br>und sie werden rekursiv per HTTP PUT gesendet</center></html>", SwingConstants.CENTER);
-        label.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        label.setFont(labelFont);
         frame.add(label);
 
         new DropTarget(label, new DropTargetAdapter() {
@@ -53,11 +55,11 @@ public class FileDropUploader {
                         }
                     }
 
-                    JOptionPane.showMessageDialog(frame, "✅ Alle Dateien wurden übertragen.");
-
+                    // JOptionPane.showMessageDialog(frame, "? Alle Dateien wurden übertragen.");
+                    JOptionPane.showMessageDialog(frame, "Alle Dateien wurden übertragen.");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(frame, "❌ Fehler: " + e.getMessage());
+                    JOptionPane.showMessageDialog(frame, "Fehler: " + e.getMessage());
                 }
             }
         });
@@ -83,18 +85,19 @@ public class FileDropUploader {
     private static void uploadFile(Path filePath, Path baseDir) throws IOException, InterruptedException {
         Path relativePath = baseDir.relativize(filePath);
         String encodedPath = encodePath(relativePath);
-
+        long lastModified = relativePath.toFile().lastModified();
         URI uri = URI.create(TARGET_URL + encodedPath);
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
+                .header( "X-Last-Modified", String.valueOf(lastModified) )
                 .PUT(HttpRequest.BodyPublishers.ofFile(filePath))
                 .header("Content-Type", "application/octet-stream")
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println("⬆ " + relativePath + " → " + response.statusCode());
+        System.out.println("\u2B06 " + relativePath + " \u2192 " + response.statusCode());
     }
 
     private static String encodePath(Path path) {
