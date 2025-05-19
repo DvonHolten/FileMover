@@ -37,8 +37,9 @@ public class FileReceiverServer {
                 return;
             }
 
+            // 'X-last-modified' in lowercase!
             long fileModificationTime = System.currentTimeMillis();
-            String lastModStr = exchange.getRequestHeaders().getFirst("X-Last-Modified");
+            String lastModStr = exchange.getRequestHeaders().getFirst("X-last-modified");
             if ( lastModStr != null ){
                 // fileModificationDate was sent
                 fileModificationTime = Long.parseLong(lastModStr);
