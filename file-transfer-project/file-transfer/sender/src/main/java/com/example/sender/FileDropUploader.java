@@ -24,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 
 public class FileDropUploader {
@@ -88,6 +89,8 @@ public class FileDropUploader {
         long lastModified = relativePath.toFile().lastModified();
         URI uri = URI.create(TARGET_URL + encodedPath);
 
+        FileTime fileTime = Files.getLastModifiedTime( filePath );
+        lastModified = fileTime.toMillis();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
