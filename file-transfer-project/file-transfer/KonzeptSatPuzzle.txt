@@ -1,0 +1,51 @@
+
+Die übliche Vorgehensweise beim Modellieren ist, die einfachste
+Implementierung zu wählen und dann umzusetzen.
+
+Mit etwas Hintergrundwissen um die interne Arbeitsweise eines SAT-Solvers
+zeigt sich, dass es große Unterschiede im Lösungsweg gibt -
+je nachdem wie die CNF-Formel aufgebaut ist: wenn die Variablen auf dem
+Grid von links oben nach rechts unten verteilt/nummeriert sind,
+wird sich der Solver (ungefähr) in dieser Reihenfolge fortbewegen.
+Werden die Variablen auf dem Grid spiralförmig von der Mitte nach außen angeordnet,
+wird sich der Solver (ungefähr) von der Mitte nach außen fortbewegen.
+
+Als Beispiel nehmen wir ein 6x6 Grid:
+Es gibt im einfachsten E2-Modell verschiedene 'Arten' von Variablen:
+-   die 'Tile-Existence-Variablen', die angeben, welche Kachel auf einer Grid-Zelle
+    sitzen. Es kann 'vertikal' nur eine Kachel auf einer Grid-Zelle sitzen.
+    Genauso kann es von jeder Kachel nur ein Exemplar geben: wenn die Kachel 77
+    auf der Grud-Zelle A5 sitzt, kann es keine weitere Kachel 77 geben.
+    Es gibt auf 6x6 = 36 Grid-Zellen je 36 Tile-Existence-Variablen.
+    Das sind insgesamt 36^2 = 1296 Variablen.
+
+-   die 'Farb-Existence-Variablen', die angeben, welche Farbe jede Kante einer
+    Grid-Zelle hat. Jede Kante kann nur eine Farbe haben. Es gibt in dem 6x6 Grid
+    ((6+1)*6)*2 = 84 Kantenlinien. Jede Kante kann eine von 7 Farben haben,
+    das ergibt 7*84 Farb-Variablen.
+
+Bisher haben wir 1296 + 588 = 1884 Variablen.
+
+Es gibt je Gitter-Zelle ein 1of36-Constraint, also 6x6=36 1of36 Constraints.
+Es gibt je Ebene ein 1of36-Constraint (Ebene), also 36 1of36 Constraints.
+Es gibt je Kantenlinie ein 1of7-Constraint, also 84 1of7 Constraints.
+
+Die 1ofN Constraints können in der einfachsten durch 'Binary Encoding' dargestellt
+werden, was eine große Zahl von binären Klauseln erfordert, aber keine zusätzlichen
+Hilfsvariablen verursacht.
+
+Weiterhin gibt es (natürlich!) eine ganze Menge Klauseln, die das Puzzle beschreiben.
+Es sind zunächst Klauseln, die den Zusammenhang 'wenn Linie 1 rot, Linie 2 blau,
+Line 3 grün und Linie 4 weiß ist, dann liegt dort die Kachel 22'. Dies ist eine
+einfache Klausel mit 4+1 Variablen. Wir brauchen 4 dieser Klauseln, da die möglichen
+Drehungen der Kachel in der Gitterzelle beachtet werden müssen.
+
+Es gibt redundante Hilfs-Klauseln der Form 'wenn diese Linie blau ist, und wir wissen,
+dass es keine blau/weissen Ecken gibt, dann kann die 2. Linie nicht weiß sein'.
+Dazu müssen wir alle Kacheln untersuchen und die nicht vorhandenen Ecken katalogisieren.
+Damit erhalten wir eine große Anzahl von redundanten, binären Sperr-Klauseln.
+Diese Klauseln sorgen für reichlich Unit-Propagation nach Festlegen einer Farbe.
+
+
+'
+
