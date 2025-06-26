@@ -1,6 +1,8 @@
 // 2025-05-15
 // Java 21: Minimaler HTTP PUT Server zur Dateiannahme mit Pfadstruktur
-
+//  History:
+//  25-jun-25, dvh  remove emojis
+//
 package com.example.receiver;
 
 import com.sun.net.httpserver.HttpServer;
@@ -26,7 +28,7 @@ public class FileReceiverServer {
         server.createContext("/upload/", new UploadHandler());
         server.setExecutor(null);
         server.start();
-        System.out.println("🚀 Empfänger läuft auf http://localhost:8080/upload/");
+        System.out.println("Empfänger läuft auf http://localhost:8080/upload/");
     }
 
     static class UploadHandler implements HttpHandler {
@@ -62,7 +64,7 @@ public class FileReceiverServer {
                 targetPath.toFile().setLastModified( fileModificationTime );
             }
 
-            String msg = "✅ Gespeichert: " + targetPath;
+            String msg = "Gespeichert: " + targetPath;
             System.out.println(msg);
             byte[] response = msg.getBytes();
             exchange.sendResponseHeaders(200, response.length);
